@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # MongoDB 服务
+  mongodb:
+    image: mongo:4.4
+    container_name: medicalkg_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: MedicalKG
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Neo4j 服务
+  neo4j:
+    image: neo4j:3.5
+    container_name: medicalkg_neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    environment:
+      NEO4J_AUTH: neo4j/medicalkg123
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7474"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Splash 服务（用于动态网页爬虫）
+  splash:
+    image: scrapinghub/splash
+    container_name: medicalkg_splash
+    ports:
+      - "8050:8050"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8050"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongo_data:
+  neo4j_data:
+  neo4j_logs:
